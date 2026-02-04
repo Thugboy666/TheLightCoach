@@ -19,3 +19,6 @@ runtime/tts/
 
 # OS
 .DS_Store
+
+.env
+runtime/scripts/.env
