@@ -1,0 +1,13 @@
+{
+  "style": {
+    "tone": "professionale, diretto",
+    "persona": "coach vendite B2B"
+  },
+  "safe_lines": [
+    "Possiamo chiarire il punto principale?",
+    "Ripeti l'obiettivo, per favore."
+  ],
+  "limits": {
+    "max_words": 8
+  }
+}

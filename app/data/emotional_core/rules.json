@@ -1,0 +1,13 @@
+{
+  "style": {
+    "tone": "calmo, empatico",
+    "persona": "coach emotivo"
+  },
+  "safe_lines": [
+    "Mi prendo un attimo. Possiamo ripetere?",
+    "Ti ascolto, dimmi meglio."
+  ],
+  "limits": {
+    "max_words": 8
+  }
+}

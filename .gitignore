@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Runtime binaries/models
+runtime/**
+!runtime/scripts/
+!runtime/scripts/**
+
+# Logs and temp
+runtime/logs/
+runtime/tmp/
+
+# Models and voices
+runtime/llm/
+runtime/asr/
+runtime/tts/
+
+# OS
+.DS_Store
