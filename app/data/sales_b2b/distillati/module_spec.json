@@ -1,0 +1,16 @@
+{
+  "id": "sales_b2b",
+  "goal": "Supporto conversazionale per vendita B2B: chiarezza, ascolto, closing pulito",
+  "inputs": [
+    "client_needs",
+    "objections",
+    "offer_context"
+  ],
+  "outputs": [
+    "next_best_question",
+    "value_pitch",
+    "objection_handling",
+    "closing_line"
+  ],
+  "notes": "Riusa lo stesso motore segnali→pattern→azioni, ma su contesto cliente."
+}
