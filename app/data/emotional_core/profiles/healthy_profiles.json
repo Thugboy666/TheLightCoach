@@ -1,0 +1,46 @@
+{
+  "profiles": [
+    {
+      "id": "secure_direct",
+      "name": "Sicura e diretta",
+      "signals": [
+        "parla chiaro: cosa vuole e cosa non vuole",
+        "rispetta i tempi senza punire",
+        "non usa terzi per sondare",
+        "se c'è un problema: propone momento e soluzione"
+      ],
+      "green_flags": [
+        "coerenza tra parole e azioni",
+        "responsabilità: 'ho sbagliato anch’io'",
+        "curiosità reale verso di te"
+      ]
+    },
+    {
+      "id": "emotionally_regulated",
+      "name": "Regolata emotivamente",
+      "signals": [
+        "non esplode per i silenzi",
+        "non pretende tracking",
+        "gestisce gelosia con dialogo, non con test",
+        "può stare nel 'non sapere' senza panico"
+      ],
+      "green_flags": [
+        "ti fa sentire più lucido, non più confuso",
+        "ti incentiva a lavorare, dormire, stare bene"
+      ]
+    },
+    {
+      "id": "boundaries_respecting",
+      "name": "Rispetta i confini",
+      "signals": [
+        "accetta un 'no' senza umiliarti",
+        "non usa sesso/colpa per ottenere",
+        "non ti chiede di dimostrare amore in tempo reale"
+      ],
+      "green_flags": [
+        "non ti isola dagli amici",
+        "non sminuisce la tua intuizione"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,111 @@
+{
+  "profiles": [
+    {
+      "id": "anxious_control_loop",
+      "name": "Dipendenza emotiva + controllo ansioso",
+      "summary": "Ricerca rassicurazioni continue, urgenza, test, colpevolizzazione se non rispondi.",
+      "signals": [
+        "chiamate o messaggi ripetuti in poco tempo",
+        "puntini / '...' per forzare risposta",
+        "frasi: 'se non rispondi allora sì', 'mi fai infelicità'",
+        "richieste di tracking (dove sei, con chi) come condizione affettiva",
+        "minacce di chiusura per ottenere reazione"
+      ],
+      "risk": "Alimenta dipendenza, ansia, perdita di centratura. Spinge l’utente a spiegare/implorare.",
+      "countermoves": [
+        "Risposta breve + confine",
+        "Ritardo intenzionale (non reattivo)",
+        "Incontro solo a freddo e con agenda",
+        "Se escalation: stop comunicazione 24–48h"
+      ],
+      "micro_scripts": [
+        "Capisco che sei agitata. Io parlo solo con calma: ci sentiamo domani.",
+        "Non faccio tracking. Se ti serve questo, non è compatibile con me."
+      ]
+    },
+    {
+      "id": "triangulation_satellites",
+      "name": "Triangolazione tramite terzi (satelliti)",
+      "summary": "Usa amici/familiari per sondare, controllare, influenzare o ottenere info.",
+      "signals": [
+        "messaggi di terzi 'preoccupati' subito dopo un conflitto",
+        "domande ripetute: 'sei sicuro dei sentimenti?'",
+        "pressione a 'riconquistare' o a reagire",
+        "coincidenze comunicative: qualcuno chiama quando l’altra persona si agita"
+      ],
+      "risk": "Aumenta paranoia e reattività. Mantiene il legame anche dopo la chiusura.",
+      "countermoves": [
+        "Separare canali: non parlare della relazione con i satelliti",
+        "Risposte standard (script)",
+        "Se insistono: limite + silenzio"
+      ],
+      "micro_scripts": [
+        "Ti ringrazio, ma non ne parlo. Se ci sono novità le gestiamo io e lei.",
+        "Apprezzo l’interesse. Non voglio triangolazioni: resto sul silenzio."
+      ]
+    },
+    {
+      "id": "push_pull",
+      "name": "Tira e molla (push-pull) emotivo",
+      "summary": "Alterna affetto e ritiro per tenere l’altro in bilico.",
+      "signals": [
+        "messaggi affettivi senza scelta concreta",
+        "sparizioni dopo aver riacceso emozione",
+        "ritorno notturno o in momenti vulnerabili",
+        "promesse vaghe: 'è difficile per me' senza responsabilità"
+      ],
+      "risk": "Crea dipendenza. L’utente vive in attesa e perde focus.",
+      "countermoves": [
+        "Richiedere chiarezza e azione concreta (data, luogo, obiettivo)",
+        "Se manca: chiusura gentile + no contatto",
+        "Non reagire ai 'breadcrumb' (briciole affettive)"
+      ],
+      "micro_scripts": [
+        "Se vuoi parlare, proponi giorno e ora. Se no, resto fermo.",
+        "Capisco. Io però ho bisogno di chiarezza: o costruiamo o chiudiamo."
+      ]
+    },
+    {
+      "id": "sexual_leverage",
+      "name": "Sesso come leva emotiva",
+      "summary": "Usa il sesso per calmare conflitti, comprare pace, o evitare responsabilità.",
+      "signals": [
+        "sesso subito dopo lamentele o accuse",
+        "calo del sesso come punizione",
+        "frasi: 'se non lo vuoi allora non mi desideri'",
+        "contatto fisico per interrompere discussioni serie"
+      ],
+      "risk": "Associa eccitazione a attaccamento e rende difficile dire no.",
+      "countermoves": [
+        "Separare sesso e conflitto: prima si chiarisce, poi eventualmente intimità",
+        "Allenare un 'no' calmo",
+        "Uscire dalla stanza 5 minuti se la situazione diventa manipolativa"
+      ],
+      "micro_scripts": [
+        "Ti desidero, ma non userò il sesso per sistemare una crisi.",
+        "Parliamo prima. Se poi ci va, ok. Se no, va bene lo stesso."
+      ]
+    },
+    {
+      "id": "victim_guilt",
+      "name": "Vittimismo e colpa (moral slap)",
+      "summary": "Ti fa sentire cattivo/ingrato per avere confini.",
+      "signals": [
+        "'mi stai portando infelicità'",
+        "'non hai rispetto per me'",
+        "'mi hai schifata?'",
+        "capovolgimento responsabilità (tu controlli lei, mentre lei pressa)"
+      ],
+      "risk": "Ti riporta nel ruolo di 'riparatore' e riattiva la tua spiegazione compulsiva.",
+      "countermoves": [
+        "Riconoscere emozione senza accettare colpa",
+        "Ripetere confine (broken record)",
+        "Non giustificare"
+      ],
+      "micro_scripts": [
+        "Mi dispiace che tu stia male. Il mio confine resta questo.",
+        "Non voglio farti del male, ma non torno nel vecchio schema."
+      ]
+    }
+  ]
+}
