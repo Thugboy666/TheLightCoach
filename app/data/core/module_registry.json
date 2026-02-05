@@ -1,0 +1,20 @@
+{
+  "version": "3.0",
+  "modules": [
+    {
+      "id": "emotional_core",
+      "name": "Emotional Core",
+      "path": "modules/emotional_core"
+    },
+    {
+      "id": "social_dating",
+      "name": "Social & Dating",
+      "path": "modules/social_dating"
+    },
+    {
+      "id": "sales_b2b",
+      "name": "Sales (B2B)",
+      "path": "modules/sales_b2b"
+    }
+  ]
+}
