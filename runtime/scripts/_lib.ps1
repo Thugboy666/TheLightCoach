@@ -11,6 +11,7 @@ function Write-Status {
     "OK" { $color = "Green" }
     "WARN" { $color = "Yellow" }
     "FAIL" { $color = "Red" }
+    "ERROR" { $color = "Red" }
     "INFO" { $color = "Cyan" }
     default { $color = "Cyan" }
   }
@@ -72,9 +73,17 @@ function Start-Proc {
     [string]$Workdir
   )
   $argumentList = $Args
-  if (-not $argumentList) {
+  if ($null -eq $argumentList) {
     $argumentList = @()
   }
   Write-Status $Label "INFO" ("Starting: {0} {1}" -f $Exe, ($argumentList -join " "))
-  return Start-Process -FilePath $Exe -ArgumentList $argumentList -WorkingDirectory $Workdir -PassThru
+  $startParams = @{
+    FilePath = $Exe
+    WorkingDirectory = $Workdir
+    PassThru = $true
+  }
+  if ($argumentList.Count -gt 0) {
+    $startParams.ArgumentList = $argumentList
+  }
+  return Start-Process @startParams
 }

@@ -3,31 +3,44 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/_lib.ps1"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$apiUrl = "http://127.0.0.1:8000"
+$tunnelUrl = "https://coach.vitazenith-wellness.it"
 
-& (Join-Path $PSScriptRoot "healthcheck.ps1")
-if ($LASTEXITCODE -ne 0) {
-  Write-Status "Healthcheck" "FAIL" "Missing critical runtime components."
-  exit 1
+Write-Host ""
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host " TheLightCoach Local Runtime Startup " -ForegroundColor Cyan
+Write-Host "=====================================" -ForegroundColor Cyan
+Write-Host ""
+
+$statusEntries = & (Join-Path $PSScriptRoot "healthcheck.ps1")
+Write-Status "Healthcheck" "INFO" "Completed dependency scan"
+
+$tunnelProc = Start-Proc "Tunnel" "powershell" @("-ExecutionPolicy", "Bypass", "-File", (Join-Path $PSScriptRoot "run_tunnel.ps1")) $root
+
+Write-Status "Tunnel" "INFO" ("Public URL: {0}" -f $tunnelUrl)
+Write-Status "FastAPI" "INFO" ("Starting API on {0}" -f $apiUrl)
+Write-Status "FastAPI" "INFO" ("Command: runtime/python310/python.exe -m uvicorn app.server:app --host 0.0.0.0 --port 8000")
+
+Write-Host ""
+Write-Host "Startup Summary" -ForegroundColor Cyan
+Write-Host ("API URL: {0}" -f $apiUrl) -ForegroundColor Cyan
+Write-Host ("Tunnel URL: {0}" -f $tunnelUrl) -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Component Status" -ForegroundColor Cyan
+if ($statusEntries) {
+  $statusEntries | Format-Table -AutoSize Component, State, Details
+} else {
+  Write-Host "No status data returned." -ForegroundColor Yellow
 }
-Write-Status "Healthcheck" "OK" "Runtime dependencies present"
+Write-Host ""
 
 $pythonExe = Join-Path $root "runtime/python310/python.exe"
-$fastApiProc = Start-Proc "FastAPI" $pythonExe @("-m", "uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8000") $root
-
-if (-not (Wait-HttpOk "http://127.0.0.1:8000/health" 20)) {
-  Write-Status "FastAPI" "FAIL" "Health endpoint not reachable"
-  if ($fastApiProc) {
-    Stop-Process -Id $fastApiProc.Id -Force
+try {
+  & $pythonExe -m uvicorn app.server:app --host 0.0.0.0 --port 8000
+} finally {
+  if ($tunnelProc -and -not $tunnelProc.HasExited) {
+    Write-Status "Tunnel" "INFO" "Stopping Cloudflare Tunnel"
+    Stop-Process -Id $tunnelProc.Id -Force -ErrorAction SilentlyContinue
   }
-  exit 1
-}
-Write-Status "FastAPI" "OK" "Health endpoint responding"
-
-Start-Proc "Tunnel" "powershell" @("-ExecutionPolicy", "Bypass", "-File", (Join-Path $PSScriptRoot "run_tunnel.ps1")) $root | Out-Null
-
-Write-Status "Tunnel" "INFO" "Hostname configured: coach.vitazenith-wellness.it"
-Write-Status "Tunnel" "INFO" "Check from phone: https://coach.vitazenith-wellness.it/health"
-
-if ($fastApiProc) {
-  Wait-Process -Id $fastApiProc.Id
+  Write-Status "Startup" "INFO" "Shutdown complete"
 }
