@@ -1,0 +1,20 @@
+{
+  "id": "emotional_core",
+  "goal": "Stabilità emotiva, confini, prevenzione dinamiche tossiche",
+  "inputs": [
+    "text_chat",
+    "voice_transcript",
+    "user_notes"
+  ],
+  "outputs": [
+    "micro_script",
+    "boundary_plan",
+    "24_72_plan",
+    "risk_score"
+  ],
+  "safety": [
+    "crisis_guardrails",
+    "no_diagnosis",
+    "consent_required"
+  ]
+}
