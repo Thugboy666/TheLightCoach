@@ -1,0 +1,10 @@
+{
+  "id": "social_dating",
+  "goal": "Approccio sano, filtri anti-tossico, comunicazione breve e centrata",
+  "outputs": [
+    "first_3_minutes",
+    "exit_on_high",
+    "redflag_filter",
+    "boundaries_scripts"
+  ]
+}
