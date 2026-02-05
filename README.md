@@ -14,6 +14,15 @@ Locale voice assistant con PTT e selezione modalità.
    ```
 4. Da telefono sulla LAN apri `http://PC:8000`.
 
+## Avvio locale + tunnel Cloudflare
+- Avvio completo (healthcheck + FastAPI + tunnel):
+  ```powershell
+  ./runtime/scripts/run_local.ps1
+  ```
+- Tunnel Cloudflare usa un named tunnel definito in `runtime/cloudflared/config.yml` con hostname `coach.vitazenith-wellness.it`.
+- Credenziali tunnel: `runtime/cloudflared/home/.cloudflared/<TUNNEL_ID>.json`.
+- Fallback token JSON: `runtime/cloudflared/home/.cloudflared/codicetunnel.json`.
+
 ## Modalità
 Alla prima apertura viene richiesta la selezione modalità. La scelta è salvata lato client (localStorage) e lato server (cookie di sessione).
 

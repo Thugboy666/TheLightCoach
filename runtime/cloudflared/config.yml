@@ -1,0 +1,6 @@
+tunnel: 989ec045-9c62-4538-b830-b59beb8dfafd
+credentials-file: home/.cloudflared/989ec045-9c62-4538-b830-b59beb8dfafd.json
+ingress:
+  - hostname: coach.vitazenith-wellness.it
+    service: http://127.0.0.1:8000
+  - service: http_status:404

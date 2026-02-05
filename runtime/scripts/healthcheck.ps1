@@ -1,27 +1,49 @@
 $ErrorActionPreference = "Stop"
-Write-Host "[healthcheck] Checking FastAPI..."
-try {
-  Invoke-RestMethod -Uri "http://localhost:8000/health" | Out-Null
-  Write-Host "[healthcheck] FastAPI OK"
-} catch {
-  Write-Host "[healthcheck] FastAPI NOT reachable"
+
+. "$PSScriptRoot/_lib.ps1"
+
+$root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
+$criticalMissing = $false
+
+function Test-Critical {
+  param(
+    [string]$Label,
+    [string]$Path
+  )
+  if (-not (Require-Path $Label $Path)) {
+    $script:criticalMissing = $true
+  }
 }
-Write-Host "[healthcheck] Checking llama.cpp server..."
-try {
-  Invoke-RestMethod -Uri "http://localhost:8080/health" | Out-Null
-  Write-Host "[healthcheck] llama.cpp OK"
-} catch {
-  Write-Host "[healthcheck] llama.cpp NOT reachable"
-}
-Write-Host "[healthcheck] Checking Piper..."
-if (Test-Path "runtime/tts/piper/piper.exe") {
-  Write-Host "[healthcheck] Piper OK"
+
+Test-Critical "Python" (Join-Path $root "runtime/python310/python.exe")
+Test-Critical "FFmpeg" (Join-Path $root "runtime/ffmpeg/ffmpeg.exe")
+Test-Critical "Cloudflared" (Join-Path $root "runtime/cloudflared/cloudflared.exe")
+Test-Critical "Cloudflared config" (Join-Path $root "runtime/cloudflared/config.yml")
+Test-Critical "Piper" (Join-Path $root "runtime/tts/piper/piper.exe")
+
+$voskPath = Join-Path $root "runtime/asr/vosk/model"
+if (Test-Path $voskPath) {
+  $hasModelFile = Get-ChildItem -Path $voskPath -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($hasModelFile) {
+    Write-Status "Vosk" "OK" "Model files present"
+  } else {
+    Write-Status "Vosk" "WARN" "Model directory is empty"
+  }
 } else {
-  Write-Host "[healthcheck] Piper missing"
+  Write-Status "Vosk" "WARN" "Model directory missing"
 }
-Write-Host "[healthcheck] Checking Vosk model..."
-if (Test-Path "runtime/asr/vosk/model") {
-  Write-Host "[healthcheck] Vosk model OK"
-} else {
-  Write-Host "[healthcheck] Vosk model missing"
+
+$configPath = Join-Path $root "runtime/cloudflared/config.yml"
+if (Test-Path $configPath) {
+  $hasHostname = Select-String -Path $configPath -Pattern "hostname:\s*coach\.vitazenith-wellness\.it" -SimpleMatch
+  if ($hasHostname) {
+    Write-Status "Tunnel config" "OK" "Hostname configured"
+  } else {
+    Write-Status "Tunnel config" "WARN" "Hostname coach.vitazenith-wellness.it not found"
+  }
 }
+
+if ($criticalMissing) {
+  exit 1
+}
+exit 0
