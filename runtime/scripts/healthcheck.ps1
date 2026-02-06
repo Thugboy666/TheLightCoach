@@ -74,7 +74,9 @@ if (Test-Path $voskPath) {
 $configPath = Join-Path $root "runtime/cloudflared/config.yml"
 $hostnameMatch = $false
 if (Test-Path $configPath) {
-  $hostnameMatch = Select-String -Path $configPath -Pattern "hostname:\s*$tunnelHostname" -SimpleMatch -ErrorAction SilentlyContinue
+  $escapedHostname = [regex]::Escape($tunnelHostname)
+  $hostnamePattern = "hostname:\s*$escapedHostname"
+  $hostnameMatch = Select-String -Path $configPath -Pattern $hostnamePattern -ErrorAction SilentlyContinue
 }
 if ($hostnameMatch) {
   Add-Status "Tunnel hostname" "OK" ("{0} configured" -f $tunnelHostname)
