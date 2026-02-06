@@ -1,10 +1,14 @@
-$ErrorActionPreference = "Stop"
-
 param(
   [string]$CloudflaredMode = "foreground",
   [switch]$DisableTunnel,
   [switch]$EnableLlama
 )
+
+$ErrorActionPreference = "Stop"
+
+. "$PSScriptRoot/_lib.ps1"
+
+$null = Get-LogsDir
 
 $argList = @()
 if ($PSBoundParameters.ContainsKey("CloudflaredMode")) {
