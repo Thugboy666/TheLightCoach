@@ -3,8 +3,8 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/_lib.ps1"
 
 param(
-  [ValidateSet("foreground", "service", "token")]
-  [string]$CloudflaredMode = "foreground",
+  [object[]]$CloudflaredMode = @("foreground"),
+  [switch]$DisableTunnel,
   [switch]$EnableLlama
 )
 
@@ -24,6 +24,21 @@ Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host "   TheLightCoach Runtime Launcher    " -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
+
+$validCloudflaredModes = @("foreground", "service", "token")
+$cloudflaredToken = $CloudflaredMode
+if ($CloudflaredMode -is [array] -and $CloudflaredMode.Count -gt 0) {
+  $cloudflaredToken = $CloudflaredMode[0]
+}
+$cloudflaredToken = [string]$cloudflaredToken
+$cloudflaredModeNormalized = ($cloudflaredToken -split "\s+")[0].ToLowerInvariant()
+if ([string]::IsNullOrWhiteSpace($cloudflaredModeNormalized)) {
+  $cloudflaredModeNormalized = "foreground"
+}
+if ($validCloudflaredModes -notcontains $cloudflaredModeNormalized) {
+  Write-Status "Tunnel" "WARN" ("Invalid CloudflaredMode '{0}', defaulting to 'foreground'." -f $cloudflaredToken)
+  $cloudflaredModeNormalized = "foreground"
+}
 
 $statusEntries = & (Join-Path $PSScriptRoot "healthcheck.ps1")
 Write-Status "Healthcheck" "INFO" "Completed dependency scan"
@@ -57,13 +72,26 @@ $apiArgs = @("-m", "uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "
 $apiProc = Start-Proc "FastAPI" $pythonExe $apiArgs $root "api"
 $processes += $apiProc
 
-if (-not (Wait-HttpOk "$apiUrl/health" 20)) {
+if (-not (Wait-HttpOk "$apiUrl/api/coach/health" 20)) {
   Write-Status "FastAPI" "WARN" "Health endpoint not ready after 20s"
+  $apiStdout = Join-Path $logDir "api.log"
+  $apiStderr = Join-Path $logDir "api.error.log"
+  if (Test-Path $apiStdout) {
+    Write-Status "FastAPI" "INFO" "Recent API stdout:"
+    Get-Content -Path $apiStdout -Tail 40 | ForEach-Object { Write-Host $_ }
+  }
+  if (Test-Path $apiStderr) {
+    Write-Status "FastAPI" "INFO" "Recent API stderr:"
+    Get-Content -Path $apiStderr -Tail 40 | ForEach-Object { Write-Host $_ }
+  }
 } else {
   Write-Status "FastAPI" "OK" "Health endpoint responding"
 }
 
-switch ($CloudflaredMode) {
+if ($DisableTunnel.IsPresent) {
+  Write-Status "Tunnel" "INFO" "Disabled via -DisableTunnel"
+} else {
+  switch ($cloudflaredModeNormalized) {
   "service" {
     $service = Get-Service -Name "Cloudflared" -ErrorAction SilentlyContinue
     if ($service) {
@@ -104,6 +132,7 @@ switch ($CloudflaredMode) {
       }
     }
   }
+}
 }
 
 Write-Host ""
