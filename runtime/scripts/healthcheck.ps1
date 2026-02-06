@@ -91,8 +91,8 @@ if ($cloudflaredProc) {
 
 $fastApiPath = Join-Path $root "app/server.py"
 if (Test-Path $fastApiPath) {
-  if (Wait-HttpOk "$apiUrl/health" 3) {
-    Add-Status "FastAPI" "OK" "Health endpoint responding"
+  if (Wait-HttpOk "$apiUrl/api/coach/health" 3) {
+    Add-Status "FastAPI" "OK" "Coach health endpoint responding"
   } else {
     Add-Status "FastAPI" "ERROR" "Health endpoint not responding"
   }

@@ -51,8 +51,15 @@ Alla prima apertura viene richiesta la selezione modalità. La scelta è salvata
 - TTS muto: verifica Piper e una voce `.onnx` in `runtime/tts/voices/`.
 - ASR muto: verifica modello Vosk in `runtime/asr/vosk/model`.
 
+## Debug Loop in 60 seconds
+```powershell
+./tools/context_pack.ps1
+./tools/quick_test.ps1
+./runtime/scripts/run_local.ps1
+```
+
 ## File tree
-- `app/server.py`: FastAPI + WebSocket ASR/TTS
+- `app/server.py`: FastAPI + Coach Engine API
 - `app/data/`: dataset per modalità
 - `app/client/`: PWA
 - `runtime/scripts/`: script PowerShell

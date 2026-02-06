@@ -1,147 +1,216 @@
-const modeSelector = document.getElementById('mode-selector');
-const assistantUI = document.getElementById('assistant-ui');
-const transcriptText = document.getElementById('transcript-text');
-const responseText = document.getElementById('response-text');
-const statusEl = document.getElementById('status');
-const activeModeEl = document.getElementById('active-mode');
+const modeSelect = document.getElementById('mode-select');
+const liveBetaToggle = document.getElementById('live-beta');
+const showAlternativesToggle = document.getElementById('show-alternatives');
 const pttButton = document.getElementById('ptt');
+const statusEl = document.getElementById('status');
+const phraseEl = document.getElementById('phrase');
+const scoreEl = document.getElementById('score');
+const clarityEl = document.getElementById('clarity');
+const centerednessEl = document.getElementById('centeredness');
+const riskEl = document.getElementById('risk');
+const activeSilenceEl = document.getElementById('active-silence');
+const alternativesEl = document.getElementById('alternatives');
+const transcriptEl = document.getElementById('transcript');
 
-let ws;
+const STORAGE_KEYS = {
+  mode: 'mirror_mode',
+  live: 'mirror_live_beta',
+  alternatives: 'mirror_show_alternatives',
+};
+
 let audioContext;
-let sourceNode;
 let workletNode;
-let currentPlayback;
-let mode = localStorage.getItem('selected_mode');
-
-async function ensureSession() {
-  try {
-    await fetch('/session');
-  } catch (err) {
-    console.warn('Session fetch failed', err);
-  }
-}
-
-function showModeSelector() {
-  modeSelector.classList.remove('hidden');
-  assistantUI.classList.add('hidden');
-}
-
-function showAssistantUI() {
-  modeSelector.classList.add('hidden');
-  assistantUI.classList.remove('hidden');
-}
+let sourceNode;
+let mediaStream;
+let gainNode;
+let isRecording = false;
+let buffers = [];
 
 function setStatus(text) {
   statusEl.textContent = text;
 }
 
-function stopPlayback() {
-  if (currentPlayback) {
-    currentPlayback.stop();
-    currentPlayback.disconnect();
-    currentPlayback = null;
+function updateStorage() {
+  localStorage.setItem(STORAGE_KEYS.mode, modeSelect.value);
+  localStorage.setItem(STORAGE_KEYS.live, String(liveBetaToggle.checked));
+  localStorage.setItem(STORAGE_KEYS.alternatives, String(showAlternativesToggle.checked));
+}
+
+function loadStorage() {
+  const storedMode = localStorage.getItem(STORAGE_KEYS.mode);
+  if (storedMode) {
+    modeSelect.value = storedMode;
+  }
+  liveBetaToggle.checked = localStorage.getItem(STORAGE_KEYS.live) === 'true';
+  showAlternativesToggle.checked = localStorage.getItem(STORAGE_KEYS.alternatives) === 'true';
+}
+
+function mergeBuffers(chunks) {
+  const length = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const result = new Int16Array(length);
+  let offset = 0;
+  chunks.forEach((chunk) => {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  });
+  return result;
+}
+
+function encodeWav(samples, sampleRate) {
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+
+  function writeString(offset, text) {
+    for (let i = 0; i < text.length; i += 1) {
+      view.setUint8(offset + i, text.charCodeAt(i));
+    }
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+
+  let offset = 44;
+  for (let i = 0; i < samples.length; i += 1) {
+    view.setInt16(offset, samples[i], true);
+    offset += 2;
+  }
+
+  return buffer;
+}
+
+async function initAudio() {
+  audioContext = new AudioContext({ sampleRate: 16000 });
+  await audioContext.audioWorklet.addModule('/static/audio-worklet-processor.js');
+  mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  sourceNode = audioContext.createMediaStreamSource(mediaStream);
+  workletNode = new AudioWorkletNode(audioContext, 'pcm-worklet');
+  gainNode = audioContext.createGain();
+  gainNode.gain.value = 0;
+  workletNode.port.onmessage = (event) => {
+    if (!isRecording) {
+      return;
+    }
+    buffers.push(new Int16Array(event.data));
+  };
+  sourceNode.connect(workletNode);
+  workletNode.connect(gainNode);
+  gainNode.connect(audioContext.destination);
+}
+
+async function startRecording() {
+  if (isRecording) {
+    return;
+  }
+  buffers = [];
+  setStatus('Registrazione in corso...');
+  pttButton.classList.add('is-recording');
+  isRecording = true;
+  if (!audioContext) {
+    await initAudio();
   }
 }
 
-async function connectWebSocket() {
-  ws = new WebSocket(`ws://${window.location.host}/ws/audio`);
-  ws.binaryType = 'arraybuffer';
+async function stopRecording() {
+  if (!isRecording) {
+    return;
+  }
+  isRecording = false;
+  pttButton.classList.remove('is-recording');
+  setStatus('Invio in corso...');
 
-  ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'set_mode', mode }));
-    setStatus('Listening');
-  };
+  const samples = mergeBuffers(buffers);
+  const wavBuffer = encodeWav(samples, 16000);
+  const blob = new Blob([wavBuffer], { type: 'audio/wav' });
 
-  ws.onmessage = async (event) => {
-    if (typeof event.data === 'string') {
-      const payload = JSON.parse(event.data);
-      if (payload.type === 'partial') {
-        transcriptText.textContent = payload.text || '...';
-        if (payload.text) {
-          stopPlayback();
-        }
-      }
-      if (payload.type === 'final') {
-        transcriptText.textContent = payload.text || '';
-      }
-      if (payload.type === 'response') {
-        responseText.textContent = payload.text || '';
-        setStatus('Speaking');
-      }
-      if (payload.type === 'mode_set') {
-        activeModeEl.textContent = payload.mode || '-';
-      }
-      if (payload.type === 'error') {
-        setStatus(payload.message || 'Error');
-      }
-      return;
+  const formData = new FormData();
+  formData.append('file', blob, 'audio.wav');
+  formData.append('mode', modeSelect.value);
+  formData.append('show_alternatives', String(showAlternativesToggle.checked));
+  formData.append('live_beta', String(liveBetaToggle.checked));
+
+  try {
+    const response = await fetch('/api/coach/analyze_audio', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) {
+      throw new Error('HTTP error');
     }
-
-    if (event.data instanceof ArrayBuffer) {
-      const audioBuffer = await audioContext.decodeAudioData(event.data.slice(0));
-      const source = audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(audioContext.destination);
-      source.onended = () => {
-        if (currentPlayback === source) {
-          currentPlayback = null;
-          setStatus('Listening');
-        }
-      };
-      stopPlayback();
-      currentPlayback = source;
-      source.start();
+    const payload = await response.json();
+    renderResponse(payload);
+    setStatus('Risposta pronta');
+  } catch (err) {
+    console.warn('Analyze failed', err);
+    setStatus('Errore durante analisi');
+  } finally {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach((track) => track.stop());
     }
-  };
-
-  ws.onclose = () => {
-    setStatus('Disconnected');
-  };
+    if (audioContext) {
+      audioContext.close();
+    }
+    mediaStream = null;
+    audioContext = null;
+    workletNode = null;
+    sourceNode = null;
+    gainNode = null;
+  }
 }
 
-async function startAudioCapture() {
-  audioContext = new AudioContext({ sampleRate: 16000 });
-  await audioContext.audioWorklet.addModule('/static/audio-worklet-processor.js');
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  sourceNode = audioContext.createMediaStreamSource(stream);
-  workletNode = new AudioWorkletNode(audioContext, 'pcm-worklet');
-  workletNode.port.onmessage = (event) => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(event.data);
-    }
-  };
-  sourceNode.connect(workletNode);
-  workletNode.connect(audioContext.destination);
+function renderResponse(payload) {
+  phraseEl.textContent = payload.phrase || '---';
+  scoreEl.textContent = payload.score ?? '--';
+  clarityEl.textContent = payload.indicators?.clarity ?? '--';
+  centerednessEl.textContent = payload.indicators?.centeredness ?? '--';
+  riskEl.textContent = payload.indicators?.risk ?? '--';
+  transcriptEl.textContent = payload.meta?.transcript || '---';
+
+  if (payload.active_silence?.enabled) {
+    activeSilenceEl.textContent = payload.active_silence.phrase || '---';
+  } else {
+    activeSilenceEl.textContent = 'Non attivo';
+  }
+
+  alternativesEl.innerHTML = '';
+  if (payload.alternatives && payload.alternatives.length > 0) {
+    payload.alternatives.forEach((item) => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      alternativesEl.appendChild(li);
+    });
+  } else {
+    const li = document.createElement('li');
+    li.textContent = 'Disattivate o non disponibili.';
+    alternativesEl.appendChild(li);
+  }
+}
+
+function attachEvents() {
+  modeSelect.addEventListener('change', updateStorage);
+  liveBetaToggle.addEventListener('change', updateStorage);
+  showAlternativesToggle.addEventListener('change', updateStorage);
+
+  pttButton.addEventListener('pointerdown', startRecording);
+  pttButton.addEventListener('pointerup', stopRecording);
+  pttButton.addEventListener('pointerleave', stopRecording);
+  pttButton.addEventListener('pointercancel', stopRecording);
 }
 
 async function init() {
-  await ensureSession();
-  if (!mode) {
-    showModeSelector();
-  } else {
-    activeModeEl.textContent = mode;
-    showAssistantUI();
-    await connectWebSocket();
-    await startAudioCapture();
-  }
-
-  document.querySelectorAll('[data-mode]').forEach((button) => {
-    button.addEventListener('click', async () => {
-      mode = button.dataset.mode;
-      localStorage.setItem('selected_mode', mode);
-      activeModeEl.textContent = mode;
-      showAssistantUI();
-      await connectWebSocket();
-      await startAudioCapture();
-    });
-  });
-
-  pttButton.addEventListener('click', () => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      setStatus('Suggesting');
-      ws.send(JSON.stringify({ type: 'ptt' }));
-    }
-  });
+  loadStorage();
+  attachEvents();
+  setStatus('Premi e parla');
 }
 
 init();
