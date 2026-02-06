@@ -25,6 +25,7 @@ Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host "   TheLightCoach Runtime Launcher    " -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
+Write-Status "Startup" "INFO" "Phase 1/3: Starting FastAPI"
 
 $validCloudflaredModes = @("foreground", "service", "token")
 $cloudflaredToken = $CloudflaredMode
@@ -89,6 +90,7 @@ if (-not (Wait-HttpOk "$apiUrl/api/coach/health" 20)) {
   Write-Status "FastAPI" "OK" "Health endpoint responding"
 }
 
+Write-Status "Startup" "INFO" "Phase 2/3: Starting Tunnel"
 if ($DisableTunnel.IsPresent) {
   Write-Status "Tunnel" "INFO" "Disabled via -DisableTunnel"
 } else {
@@ -96,6 +98,12 @@ if ($DisableTunnel.IsPresent) {
   "service" {
     $service = Get-Service -Name "Cloudflared" -ErrorAction SilentlyContinue
     if ($service) {
+      $serviceConfig = Get-CloudflaredServiceConfigPath
+      if ($serviceConfig) {
+        Write-Status "Tunnel" "INFO" ("Service config: {0}" -f $serviceConfig)
+      } else {
+        Write-Status "Tunnel" "INFO" "Service config: (not detected)"
+      }
       if ($service.Status -ne "Running") {
         try {
           Start-Service -Name "Cloudflared"
@@ -115,9 +123,12 @@ if ($DisableTunnel.IsPresent) {
     } elseif (-not (Test-Path $configPath)) {
       Write-Status "Tunnel" "ERROR" ("Missing: {0}" -f $configPath)
     } else {
-      $tunnelProc = & (Join-Path $PSScriptRoot "run_tunnel.ps1") -Mode "token"
-      if ($tunnelProc) {
-        $processes += $tunnelProc
+      Write-Status "Tunnel" "INFO" ("Config: {0}" -f $configPath)
+      $tunnelResult = & (Join-Path $PSScriptRoot "run_tunnel.ps1") -Mode "token"
+      if ($tunnelResult -and $tunnelResult.Process) {
+        $processes += $tunnelResult.Process
+      } else {
+        Write-Status "Tunnel" "WARN" ("Tunnel start failed: {0}" -f $tunnelResult.Error)
       }
     }
   }
@@ -127,15 +138,19 @@ if ($DisableTunnel.IsPresent) {
     } elseif (-not (Test-Path $configPath)) {
       Write-Status "Tunnel" "ERROR" ("Missing: {0}" -f $configPath)
     } else {
-      $tunnelProc = & (Join-Path $PSScriptRoot "run_tunnel.ps1")
-      if ($tunnelProc) {
-        $processes += $tunnelProc
+      Write-Status "Tunnel" "INFO" ("Config: {0}" -f $configPath)
+      $tunnelResult = & (Join-Path $PSScriptRoot "run_tunnel.ps1")
+      if ($tunnelResult -and $tunnelResult.Process) {
+        $processes += $tunnelResult.Process
+      } else {
+        Write-Status "Tunnel" "WARN" ("Tunnel start failed: {0}" -f $tunnelResult.Error)
       }
     }
   }
 }
 }
 
+Write-Status "Startup" "INFO" "Phase 3/3: Summary"
 Write-Host ""
 Write-Host "Startup Summary" -ForegroundColor Cyan
 Write-Host ("API URL: {0}" -f $apiUrl) -ForegroundColor Cyan
