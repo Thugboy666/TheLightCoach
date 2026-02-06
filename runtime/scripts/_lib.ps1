@@ -82,13 +82,13 @@ function Start-Proc {
     [string]$Label,
     [string]$Exe,
     [Alias("ArgumentList")]
-    [string[]]$Args,
+    [string[]]$ProcArgs,
     [string]$Workdir,
     [string]$LogName
   )
   $argumentList = @()
-  if ($Args) {
-    $argumentList = @($Args | Where-Object { $null -ne $_ })
+  if ($ProcArgs) {
+    $argumentList = @($ProcArgs | Where-Object { $null -ne $_ })
   }
   $safeWorkdir = $Workdir
   if ([string]::IsNullOrWhiteSpace($safeWorkdir)) {
@@ -125,7 +125,11 @@ function Start-Proc {
     NoNewWindow = $true
   }
   if ($argumentList.Count -gt 0) {
-    $startParams.ArgumentList = $argumentList
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+      $startParams.ArgumentList = $argumentList -join " "
+    } else {
+      $startParams.ArgumentList = $argumentList
+    }
   }
   return Start-Process @startParams
 }
