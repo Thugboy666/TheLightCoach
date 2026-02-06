@@ -1,11 +1,11 @@
-$ErrorActionPreference = "Stop"
-
-. "$PSScriptRoot/_lib.ps1"
-
 param(
   [ValidateSet("config", "token")]
   [string]$Mode = "config"
 )
+
+$ErrorActionPreference = "Stop"
+
+. "$PSScriptRoot/_lib.ps1"
 
 $root = Get-RuntimeRoot
 $cloudflaredHome = Join-Path $root "runtime/cloudflared/home"
