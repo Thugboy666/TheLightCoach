@@ -77,8 +77,27 @@ sessions = SessionStore()
 
 class StreamingASR:
     def __init__(self) -> None:
-        self.available = Model is not None and KaldiRecognizer is not None and VOSK_MODEL_PATH.exists()
-        self.model = Model(str(VOSK_MODEL_PATH)) if self.available else None
+        self.available = False
+        self.model = None
+        if Model is None or KaldiRecognizer is None:
+            return
+        if not self._has_model_files():
+            return
+        try:
+            self.model = Model(str(VOSK_MODEL_PATH))
+            self.available = True
+        except Exception as exc:  # noqa: BLE001
+            logging.warning("Vosk model unavailable: %s", exc)
+
+    def _has_model_files(self) -> bool:
+        if not VOSK_MODEL_PATH.exists():
+            return False
+        required_files = [
+            VOSK_MODEL_PATH / "am" / "final.mdl",
+            VOSK_MODEL_PATH / "conf" / "model.conf",
+            VOSK_MODEL_PATH / "graph" / "words.txt",
+        ]
+        return any(path.exists() for path in required_files)
 
     def create_recognizer(self) -> Optional[Any]:
         if not self.available:

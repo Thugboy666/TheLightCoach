@@ -10,18 +10,37 @@ Locale voice assistant con PTT e selezione modalità.
    ```
 3. Avvia:
    ```powershell
-   ./runtime/scripts/run_local.ps1
+   ./runtime/scripts/run_all.ps1
    ```
 4. Da telefono sulla LAN apri `http://PC:8000`.
 
 ## Avvio locale + tunnel Cloudflare
 - Avvio completo (healthcheck + FastAPI + tunnel):
   ```powershell
-  ./runtime/scripts/run_local.ps1
+  ./runtime/scripts/run_all.ps1
+  ```
+- Avvio con llama-server (se presente):
+  ```powershell
+  ./runtime/scripts/run_all.ps1 -EnableLlama
   ```
 - Tunnel Cloudflare usa un named tunnel definito in `runtime/cloudflared/config.yml` con hostname `coach.vitazenith-wellness.it`.
 - Credenziali tunnel: `runtime/cloudflared/home/.cloudflared/<TUNNEL_ID>.json`.
 - Fallback token JSON: `runtime/cloudflared/home/.cloudflared/codicetunnel.json`.
+- Modalità token (usa config.yml + codicetunnel.json):
+  ```powershell
+  ./runtime/scripts/run_all.ps1 -CloudflaredMode token
+  ```
+
+### Cloudflared come servizio Windows (opzionale)
+La modalità predefinita è **foreground** (portatile, senza admin). Per usare un servizio:
+1. Installa il servizio manualmente con `--config` (non inserire token nel binpath).
+   ```powershell
+   sc.exe create Cloudflared binPath= "\"C:\TheLightCoach\runtime\cloudflared\cloudflared.exe\" --config \"C:\TheLightCoach\runtime\cloudflared\config.yml\" tunnel run"
+   ```
+2. Avvia con:
+   ```powershell
+   ./runtime/scripts/run_all.ps1 -CloudflaredMode service
+   ```
 
 ## Modalità
 Alla prima apertura viene richiesta la selezione modalità. La scelta è salvata lato client (localStorage) e lato server (cookie di sessione).
