@@ -1,3 +1,4 @@
+# NOTE: Keep param as the first executable statement for Windows PowerShell 5.1 compatibility.
 param(
   [object[]]$CloudflaredMode = @("foreground"),
   [switch]$DisableTunnel,
