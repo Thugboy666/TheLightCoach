@@ -148,8 +148,9 @@ function Start-Proc {
   }
 
   $argumentSummary = ConvertTo-ArgumentString $effectiveArgs
+  $hasArgumentSummary = -not [string]::IsNullOrWhiteSpace($argumentSummary)
   $startSummary = $exePath
-  if (-not [string]::IsNullOrWhiteSpace($argumentSummary)) {
+  if ($hasArgumentSummary) {
     $startSummary = "{0} {1}" -f $exePath, $argumentSummary
   }
   Write-Status $Label "INFO" ("Starting: {0}" -f $startSummary)
@@ -165,9 +166,9 @@ function Start-Proc {
     RedirectStandardError = $stderrPath
     NoNewWindow = $true
   }
-  if ($effectiveArgs.Count -gt 0) {
+  if ($hasArgumentSummary) {
     if ($PSVersionTable.PSVersion.Major -lt 6) {
-      $startParams.ArgumentList = ConvertTo-ArgumentString $effectiveArgs
+      $startParams.ArgumentList = $argumentSummary
     } else {
       $startParams.ArgumentList = $effectiveArgs
     }
