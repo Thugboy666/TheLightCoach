@@ -77,6 +77,35 @@ function Wait-HttpOk {
   return $false
 }
 
+function Quote-Argument {
+  param(
+    [AllowNull()]
+    [string]$Value
+  )
+  if ($null -eq $Value) {
+    return '""'
+  }
+  if ([System.Management.Automation.Language.CodeGeneration] -and
+      [System.Management.Automation.Language.CodeGeneration].GetMethod("QuoteArgument")) {
+    return [System.Management.Automation.Language.CodeGeneration]::QuoteArgument($Value)
+  }
+  if ($Value -match '[\s"`]') {
+    $escaped = $Value -replace '"', '\"'
+    return '"' + $escaped + '"'
+  }
+  return $Value
+}
+
+function ConvertTo-ArgumentString {
+  param(
+    [string[]]$Args
+  )
+  if (-not $Args) {
+    return ""
+  }
+  return ($Args | ForEach-Object { Quote-Argument $_ }) -join " "
+}
+
 function Start-Proc {
   param(
     [string]$Label,
@@ -105,30 +134,42 @@ function Start-Proc {
   $logDir = Get-LogsDir
   $stdoutPath = Join-Path $logDir ("{0}.log" -f $name)
   $stderrPath = Join-Path $logDir ("{0}.error.log" -f $name)
+  $commandPath = Join-Path $logDir ("{0}.command.log" -f $name)
 
-  $argumentSummary = ""
-  if ($argumentList.Count -gt 0) {
-    $argumentSummary = $argumentList -join " "
+  $exePath = $Exe
+  $effectiveArgs = $argumentList
+  if ($Exe -match '\.ps1$') {
+    $powershellExe = Join-Path $PSHOME "powershell.exe"
+    if (-not (Test-Path $powershellExe)) {
+      $powershellExe = "powershell.exe"
+    }
+    $exePath = $powershellExe
+    $effectiveArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $Exe) + $argumentList
   }
 
-  $startSummary = $Exe
+  $argumentSummary = ConvertTo-ArgumentString $effectiveArgs
+  $startSummary = $exePath
   if (-not [string]::IsNullOrWhiteSpace($argumentSummary)) {
-    $startSummary = "{0} {1}" -f $Exe, $argumentSummary
+    $startSummary = "{0} {1}" -f $exePath, $argumentSummary
   }
   Write-Status $Label "INFO" ("Starting: {0}" -f $startSummary)
+  Write-Status $Label "INFO" ("Stdout log: {0}" -f $stdoutPath)
+  Write-Status $Label "INFO" ("Stderr log: {0}" -f $stderrPath)
+  Set-Content -Path $commandPath -Value ("[{0}] {1}" -f (Get-Date -Format "s"), $startSummary)
+  Write-Status $Label "INFO" ("Command log: {0}" -f $commandPath)
   $startParams = @{
-    FilePath = $Exe
+    FilePath = $exePath
     WorkingDirectory = $safeWorkdir
     PassThru = $true
     RedirectStandardOutput = $stdoutPath
     RedirectStandardError = $stderrPath
     NoNewWindow = $true
   }
-  if ($argumentList.Count -gt 0) {
+  if ($effectiveArgs.Count -gt 0) {
     if ($PSVersionTable.PSVersion.Major -lt 6) {
-      $startParams.ArgumentList = $argumentList -join " "
+      $startParams.ArgumentList = ConvertTo-ArgumentString $effectiveArgs
     } else {
-      $startParams.ArgumentList = $argumentList
+      $startParams.ArgumentList = $effectiveArgs
     }
   }
   return Start-Process @startParams
@@ -153,4 +194,20 @@ function Get-TunnelTokenInfo {
     return $null
   }
   return $data
+}
+
+function Get-CloudflaredServiceConfigPath {
+  $service = Get-WmiObject -Class Win32_Service -Filter "Name='Cloudflared'" -ErrorAction SilentlyContinue
+  if (-not $service) {
+    return $null
+  }
+  $pathName = $service.PathName
+  if ([string]::IsNullOrWhiteSpace($pathName)) {
+    return $null
+  }
+  $configMatch = [regex]::Match($pathName, '(--config|-config)\s+("?)([^"]+)\2')
+  if ($configMatch.Success) {
+    return $configMatch.Groups[3].Value
+  }
+  return $null
 }

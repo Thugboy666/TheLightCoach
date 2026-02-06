@@ -7,6 +7,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+Write-Host "Launching local runtime (FastAPI -> health -> tunnel -> summary)" -ForegroundColor Cyan
+
 $argList = @()
 $argList += @("-CloudflaredMode", $CloudflaredMode)
 if ($DisableTunnel.IsPresent) {
