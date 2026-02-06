@@ -16,4 +16,4 @@ if ($EnableLlama.IsPresent) {
   $argList += "-EnableLlama"
 }
 
-& "$PSScriptRoot/run_all.ps1" @argList
+& (Join-Path $PSScriptRoot "run_all.ps1") @argList
