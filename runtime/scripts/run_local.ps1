@@ -7,14 +7,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-. "$PSScriptRoot/_lib.ps1"
-
-$null = Get-LogsDir
-
 $argList = @()
-if ($PSBoundParameters.ContainsKey("CloudflaredMode")) {
-  $argList += @("-CloudflaredMode", $CloudflaredMode)
-}
+$argList += @("-CloudflaredMode", $CloudflaredMode)
 if ($DisableTunnel.IsPresent) {
   $argList += "-DisableTunnel"
 }
