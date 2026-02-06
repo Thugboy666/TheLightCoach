@@ -105,7 +105,23 @@ function Start-Proc {
   $stdoutPath = Join-Path $logDir ("{0}.log" -f $name)
   $stderrPath = Join-Path $logDir ("{0}.error.log" -f $name)
 
-  Write-Status $Label "INFO" ("Starting: {0} {1}" -f $Exe, ($argumentList -join " "))
+  $argumentString = ""
+  if ($argumentList.Count -gt 0) {
+    $argumentString = ($argumentList | ForEach-Object {
+      $arg = $_
+      if ($arg -match "[\s`""]") {
+        '"' + ($arg -replace '"', '\\"') + '"'
+      } else {
+        $arg
+      }
+    }) -join " "
+  }
+
+  $startSummary = $Exe
+  if (-not [string]::IsNullOrWhiteSpace($argumentString)) {
+    $startSummary = "{0} {1}" -f $Exe, $argumentString
+  }
+  Write-Status $Label "INFO" ("Starting: {0}" -f $startSummary)
   $startParams = @{
     FilePath = $Exe
     WorkingDirectory = $safeWorkdir
@@ -114,8 +130,8 @@ function Start-Proc {
     RedirectStandardError = $stderrPath
     NoNewWindow = $true
   }
-  if ($argumentList.Count -gt 0) {
-    $startParams.ArgumentList = $argumentList
+  if (-not [string]::IsNullOrWhiteSpace($argumentString)) {
+    $startParams.ArgumentList = $argumentString
   }
   return Start-Process @startParams
 }
