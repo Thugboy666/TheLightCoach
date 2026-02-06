@@ -6,6 +6,21 @@ $root = Get-RuntimeRoot
 $apiUrl = "http://127.0.0.1:8000"
 $pythonExe = Join-Path $root "runtime/python310/python.exe"
 
+function Invoke-ApiFormPost {
+  param(
+    [string]$Uri,
+    [hashtable]$FormData
+  )
+  if ($PSVersionTable.PSVersion.Major -ge 7) {
+    return Invoke-RestMethod -Uri $Uri -Method Post -Form $FormData
+  }
+
+  $encodedBody = ($FormData.GetEnumerator() | ForEach-Object {
+      "{0}={1}" -f [System.Uri]::EscapeDataString($_.Key), [System.Uri]::EscapeDataString([string]$_.Value)
+    }) -join "&"
+  return Invoke-RestMethod -Uri $Uri -Method Post -Body $encodedBody -ContentType "application/x-www-form-urlencoded"
+}
+
 function Add-Result {
   param(
     [string]$Label,
@@ -51,7 +66,7 @@ try {
         show_alternatives = "true"
         live_beta = "false"
       }
-      $response = Invoke-RestMethod -Uri "$apiUrl/api/coach/analyze_audio" -Method Post -Form $form
+      $response = Invoke-ApiFormPost -Uri "$apiUrl/api/coach/analyze_audio" -FormData $form
       $ok = $true
       if (-not $response.phrase) { $ok = $false }
       if (-not $response.score) { $ok = $false }
