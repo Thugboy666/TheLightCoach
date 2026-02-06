@@ -1,3 +1,7 @@
+:root {
+  color-scheme: dark;
+}
+
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
@@ -8,59 +12,152 @@ body {
 .app {
   max-width: 720px;
   margin: 0 auto;
-  padding: 32px 20px;
+  padding: 28px 20px 40px;
+}
+
+.app-header {
+  margin-bottom: 18px;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: #b6c1dd;
+  font-size: 0.95rem;
 }
 
 .panel {
   background: #161b2d;
-  padding: 24px;
+  padding: 20px;
   border-radius: 16px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.25);
+  margin-bottom: 18px;
 }
 
-.hidden {
-  display: none;
-}
-
-.mode-buttons {
+.controls {
   display: grid;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 14px;
 }
 
-.mode-buttons button {
-  padding: 14px 18px;
-  font-size: 16px;
-  border-radius: 10px;
-  border: none;
-  background: #2b59ff;
-  color: white;
-  cursor: pointer;
+.field {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
 }
 
-header {
+select {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #2c3556;
+  background: #0f1424;
+  color: inherit;
+}
+
+.toggle {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
+  gap: 10px;
+  font-weight: 600;
 }
 
-.transcript,
-.response {
-  margin-top: 16px;
-  padding: 16px;
-  background: #0f1424;
-  border-radius: 12px;
+.toggle input {
+  transform: scale(1.2);
 }
 
 .ptt {
-  margin-top: 20px;
   width: 100%;
   padding: 18px;
   font-size: 20px;
-  border-radius: 12px;
+  border-radius: 14px;
   border: none;
   background: #ff7a00;
   color: #1b1405;
   font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+.ptt.is-recording {
+  background: #ff3b30;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.2);
+  transform: scale(0.98);
+}
+
+.status {
+  text-align: center;
+  margin: 0;
+  color: #9fb0d5;
+}
+
+.output .phrase-block {
+  margin-bottom: 16px;
+}
+
+.label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9fb0d5;
+}
+
+.phrase {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 8px 0 0;
+}
+
+.score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.score-card {
+  background: #0f1424;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.score-card strong {
+  display: block;
+  font-size: 1.2rem;
+  margin-top: 6px;
+}
+
+.details {
+  background: #0f1424;
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.detail-row {
+  margin-top: 12px;
+}
+
+.detail-row h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.detail-row p,
+.detail-row ul {
+  margin: 0;
+  color: #c7d1eb;
+}
+
+.detail-row ul {
+  padding-left: 20px;
+}
+
+@media (max-width: 480px) {
+  .phrase {
+    font-size: 1.2rem;
+  }
 }

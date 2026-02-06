@@ -17,6 +17,12 @@ runtime/llm/
 runtime/asr/
 runtime/tts/
 
+# Secrets and certificates
+runtime/cloudflared/home/**
+**/*.pem
+**/*token*.json
+runtime/**/cert.pem
+
 # OS
 .DS_Store
 

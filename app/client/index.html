@@ -3,35 +3,80 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>TheLightCoach - Voice Assistant</title>
+    <title>TheLightCoach - Mirror Coach</title>
     <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
     <main class="app">
-      <section id="mode-selector" class="panel">
-        <h1>Seleziona modalità</h1>
-        <p>Seleziona la modalità prima di attivare il microfono.</p>
-        <div class="mode-buttons">
-          <button data-mode="emotional_core">Emotional Core</button>
-          <button data-mode="social_dating">Social Dating</button>
-          <button data-mode="sales_b2b">Sales B2B</button>
-        </div>
+      <header class="app-header">
+        <h1>Post-Evento / Mirror Coach</h1>
+        <p class="subtitle">Privacy-first, push-to-talk, risposta breve e strutturata.</p>
+      </header>
+
+      <section class="panel controls">
+        <label class="field">
+          Modalità
+          <select id="mode-select">
+            <option value="emotional_core">Emotional Core</option>
+            <option value="social_dating">Social Dating</option>
+            <option value="sales_b2b">Sales B2B</option>
+          </select>
+        </label>
+
+        <label class="toggle">
+          <input id="live-beta" type="checkbox" />
+          <span>Coach Live (beta)</span>
+        </label>
+
+        <label class="toggle">
+          <input id="show-alternatives" type="checkbox" />
+          <span>Mostra alternative</span>
+        </label>
+
+        <button id="ptt" class="ptt" type="button">Parla ora</button>
+        <p id="status" class="status">In attesa</p>
       </section>
 
-      <section id="assistant-ui" class="panel hidden">
-        <header>
-          <h2>Modalità attiva: <span id="active-mode">-</span></h2>
-          <span id="status">Idle</span>
-        </header>
-        <div class="transcript">
-          <h3>Trascrizione</h3>
-          <p id="transcript-text">In attesa...</p>
+      <section class="panel output">
+        <div class="phrase-block">
+          <span class="label">Frase Unica</span>
+          <p id="phrase" class="phrase">---</p>
         </div>
-        <button id="ptt" class="ptt">RISPOSTA</button>
-        <div class="response">
-          <h3>Risposta</h3>
-          <p id="response-text">---</p>
+
+        <div class="score-grid">
+          <div class="score-card">
+            <span>Mirror Score</span>
+            <strong id="score">--</strong>
+          </div>
+          <div class="score-card">
+            <span>Chiarezza</span>
+            <strong id="clarity">--</strong>
+          </div>
+          <div class="score-card">
+            <span>Centratura</span>
+            <strong id="centeredness">--</strong>
+          </div>
+          <div class="score-card">
+            <span>Rischio</span>
+            <strong id="risk">--</strong>
+          </div>
         </div>
+
+        <details class="details">
+          <summary>Mostra dettagli</summary>
+          <div class="detail-row">
+            <h3>Silenzio Attivo</h3>
+            <p id="active-silence">---</p>
+          </div>
+          <div class="detail-row">
+            <h3>Alternative</h3>
+            <ul id="alternatives"></ul>
+          </div>
+          <div class="detail-row">
+            <h3>Trascrizione</h3>
+            <p id="transcript">---</p>
+          </div>
+        </details>
       </section>
     </main>
 
